@@ -2,9 +2,6 @@
 namespace slib;
 
 class ArrayPath {
-    // if (!defined('ARRAY_PATH_SEPERATOR')) {
-    //     define('ARRAY_PATH_SEPERATOR', '/');
-    // }
     static $seperator = '.';
     /**
      *  mixed array_path_get ( array &$array, string $path1 [, string $path2 ...])
