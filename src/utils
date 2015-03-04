@@ -1,0 +1,85 @@
+if ( ! function_exists('gemId')) {
+    function gemId($length=4) {
+        return bin2hex(openssl_random_pseudo_bytes($length));
+    }
+}
+
+if ( ! function_exists('copy_dir')) {
+    function copy_dir($src,$dst) {
+        $dir = opendir($src); 
+        @mkdir($dst); 
+        while(false !== ( $file = readdir($dir)) ) { 
+            if (( $file != '.' ) && ( $file != '..' )) { 
+                if ( is_dir($src . '/' . $file) ) { 
+                    copy_dir($src . '/' . $file,$dst . '/' . $file); 
+                } 
+                else { 
+                    copy($src . '/' . $file,$dst . '/' . $file); 
+                } 
+            } 
+        } 
+        closedir($dir); 
+    } 
+}
+
+if (!function_exists('rm_dir')) {
+    function rm_dir($path) {
+        // log_message('debug', 'os:' . PHP_OS);
+        if (PHP_OS === 'WINNT') {
+            $cmd = "rd /s /q \"{$path}\"";
+            //echo $cmd;
+        } else {
+            $cmd = "rm -rf \"{$path}\"";
+            // echo $cmd;
+        }
+        $result = `$cmd`;
+        log_message('debug', $cmd);
+        log_message('debug', $result);
+    }
+}
+
+if ( ! function_exists('scan_dir')) {
+    function scan_dir($path, $callback=null) {
+        if (!file_exists($path)) return null;
+        if (!is_dir($path)) return array($path);
+        $dir = opendir($path);
+        $result = array();
+        while(false !== ( $file = readdir($dir)) ) { 
+            if ($file == '.' || $file == '..') continue;
+            $filepath = $path . DIRECTORY_SEPARATOR . $file;
+            if (is_dir($filepath)) { 
+                $sub = scan_dir($filepath, $callback);
+                // log_message('debug', $filepath . '--'. json_encode($sub));
+                if (empty($sub)) continue;
+                $sub = array_map(function($f) use ($file) { 
+                        return $file . DIRECTORY_SEPARATOR . $f;
+                    }, $sub);
+                $result = array_merge($result, $sub);
+            } else {
+                if ($callback !== null && is_callable($callback)) {
+                    if ($callback($filepath)) {
+                        $result[] = $file;
+                    }
+                } else {
+                    $result[] = $file;
+                }
+            } 
+        } 
+        closedir($dir);
+
+        return $result;
+    }
+}
+
+if ( ! function_exists('file_filter')) {
+    function file_filter($exts) {
+        return function($file) use ($exts) {
+            $pathinfo = pathinfo($file);
+            if (isset($pathinfo['extension']) && in_array($pathinfo['extension'], $exts)) {
+                return true;
+            } else {
+                return false;
+            }
+        };
+    }
+}
